@@ -1,11 +1,17 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Repositories;
 
 use Illuminate\Http\Request;
+use App\Models\Customer;
 
-class TransactionController extends Controller
+class CustomerRepository
 {
+    public $customer;
+
+    public function __construct(Customer $customer) {
+        $this->customer = $customer;
+    }
     /**
      * Display a listing of the resource.
      */

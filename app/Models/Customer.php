@@ -22,6 +22,10 @@ class Customer extends Model
         'password',
     ];
 
+    protected $casts = [
+        'password' => 'hashed',
+    ];
+
     public function wallet(): HasOne
     {
         return $this->hasOne(Wallet::class);

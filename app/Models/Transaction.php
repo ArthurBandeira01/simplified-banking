@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Transaction extends Model
@@ -16,7 +17,13 @@ class Transaction extends Model
         'value'
     ];
 
-    protected $hidden = [
-        'password',
-    ];
+    public function payerWallet(): BelongsTo
+    {
+        return $this->belongsTo(Wallet::class, 'payer_wallet_id');
+    }
+
+    public function payeeWallet()
+    {
+        return $this->belongsTo(Wallet::class, 'payee_wallet_id');
+    }
 }
