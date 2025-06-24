@@ -4,6 +4,5 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Api\TransactionController;
 use Illuminate\Support\Facades\Route;
 
-
-Route::post('/transfer', [TransactionController::class, 'transfer'])
-    ->name('transactions.transfer');
+Route::get('/', [TransactionController::class, 'index'])->name('statusApi');
+Route::post('/transfer', [TransactionController::class, 'transfer'])->name('transfer');

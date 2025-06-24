@@ -34,6 +34,24 @@ class TransactionController
         $this->transactionHistoryService = $transactionHistoryService;
         $this->walletService = $walletService;
     }
+
+    /**
+     * Verify the status of the API.
+     * @return mixed|\Illuminate\Http\JsonResponse
+     */
+    public function index()
+    {
+        $databaseConnection = DB::connection()->getPdo() ? 'Connected' : 'Not Connected';
+        $memoryUsage = memory_get_usage(true) / 1024 / 1024;
+        $statusCode = $databaseConnection === 'Not Connected' ? $statusCode = 503 : 200;
+
+        return response()->json([
+            'Status' => $statusCode,
+            'DatabaseConnection' => $databaseConnection,
+            'MemoryUsage' => $memoryUsage . ' MB',
+        ], $statusCode);
+    }
+
     /**
      * Make a transaction.
      */
@@ -54,7 +72,7 @@ class TransactionController
 
         // Verify authorization
         $authResponse = Http::get('https://util.devi.tools/api/v2/authorize');
-        dd($authResponse->json());
+        // dd($authResponse->json());
         if ($authResponse->failed() || $authResponse->json('message') !== 'Autorizado') {
             return response()->json(['error' => 'Transfer not authorized.'], 403);
         }
@@ -73,13 +91,11 @@ class TransactionController
             DB::commit();
 
             // Notificar recebedor
-            Http::post('https://util.devi.tools/api/v1/notify', [
-                'message' => 'You have received a transfer of R$ ' . number_format($value, 2, ',', '.')
-            ]);
+            // Http::post('https://util.devi.tools/api/v1/notify', [
+            //     'message' => 'You have received a transfer of R$ ' . number_format($value, 2, ',', '.')
+            // ]);
 
-            return new TransactionResource($transaction)
-                ->response()
-                ->setStatusCode(201);
+            return TransactionResource::collection($transaction);
 
         } catch (\Exception $e) {
             DB::rollBack();

@@ -15,7 +15,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        Customer::factory(10)->create();
-        Retailer::factory(10)->create();
+        $this->call([
+            CustomerTableSeeder::class,
+            RetailerTableSeeder::class,
+        ]);
     }
 }
