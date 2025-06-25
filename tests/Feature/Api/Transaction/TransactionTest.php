@@ -12,6 +12,8 @@ use Tests\TestCase;
 
 class TransactionTest extends TestCase
 {
+    use RefreshDatabase, WithFaker;
+
     protected Customer $payer;
     protected Wallet $payerWallet;
 
@@ -22,76 +24,133 @@ class TransactionTest extends TestCase
     {
         parent::setUp();
 
-        // Mocks das APIs externas
+        // 'https://util.devi.tools/api/v1/notify'    => Http::response(['message' => 'Success'], 200),
         Http::fake([
             'https://util.devi.tools/api/v2/authorize' => Http::response(['message' => 'Autorizado'], 200),
-            'https://util.devi.tools/api/v1/notify'    => Http::response(['message' => 'Success'], 200),
         ]);
 
-        // Cria customer e carteira
+        // Create customer and wallet
         $this->payer = Customer::factory()->create();
         $this->payerWallet = $this->payer->wallet()->create([
             'balance' => 500,
         ]);
 
-        // Cria retailer e carteira
+        // Create retailer and wallet
         $this->payee = Retailer::factory()->create();
         $this->payeeWallet = $this->payee->wallet()->create([
             'balance' => 100,
         ]);
     }
 
-    public function test_customer_can_transfer_to_retailer()
+
+    /**
+     * Test if connection is ok
+     * @return void
+     */
+
+    public function test_connection_is_ok(): void
+    {
+        $response = $this->get('/api');
+
+        $response->assertStatus(200);
+    }
+
+    /**
+     * Test transfer between wallets.
+     * @return void
+     */
+    public function test_transfer()
     {
         $response = $this->postJson('/api/transfer', [
             'payer_wallet_id' => $this->payerWallet->id,
             'payee_wallet_id' => $this->payeeWallet->id,
-            'value' => 150,
+            'value' => 100,
         ]);
 
         $response->assertStatus(201)
-                 ->assertJson([
-                     'message' => 'Transaction completed successfully',
-                 ]);
+            ->assertJsonStructure([
+                'data' => [
+                    'id',
+                    'payer',
+                    'payee',
+                    'value',
+                    'created_at',
+                    'updated_at',
+                ]
+            ]);
+
 
         $this->assertDatabaseHas('wallets', [
             'id' => $this->payerWallet->id,
-            'balance' => 350,
+            'balance' => 400,
         ]);
 
         $this->assertDatabaseHas('wallets', [
             'id' => $this->payeeWallet->id,
-            'balance' => 250,
+            'balance' => 200,
         ]);
+    }
+
+    /**
+     * Verify balance.
+     */
+    public function test_transfer_fails_if_insufficient_balance(): void
+    {
+        $response = $this->postJson('/api/transfer', [
+            'payer_wallet_id' => $this->payerWallet->id,
+            'payee_wallet_id' => $this->payeeWallet->id,
+            'value' => 550,
+        ]);
+
+        $response->assertStatus(400)
+            ->assertJson([
+                'error' => 'Insufficient balance.',
+            ]);
+    }
+
+    // /**
+    //  * Test retailer cannot send money.
+    //  * @return void
+    //  */
+    public function test_retailer_cannot_send_money(): void
+    {
+        $response = $this->postJson('/api/transfer', [
+            'payer_wallet_id' => $this->payeeWallet->id,
+            'payee_wallet_id' => $this->payerWallet->id,
+            'value' => 100,
+        ]);
+
+        $response->assertStatus(403)
+            ->assertJson([
+                'error' => 'Retailers cannot send money.',
+            ]);
+    }
+
+    /**
+     * Test if value transfer is valid.
+     * @return void
+     */
+    public function test_transfer_value(): void
+    {
+        $response = $this->postJson('/api/transfer', [
+            'payer_wallet_id' => $this->payerWallet->id,
+            'payee_wallet_id' => $this->payeeWallet->id,
+            'value' => -100,
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJson([
+                'message' => 'Transaction value must be at least 0.01.',
+            ]);
     }
 
     /**
      * A basic feature test example.
      */
-    // public function test_transfer_fails_if_insufficient_balance(): void
-    // {
-    //     $response = $this->get('/');
+    public function test_transfer_fails_if_authorization_service_denies(): void
+    {
+        $response = $this->get('/');
 
-    //     $response->assertStatus(200);
-    // }
-
-    // /**
-    //  * A basic feature test example.
-    //  */
-    // public function test_retailer_cannot_send_money(): void
-    // {
-    //     $response = $this->get('/');
-
-    //     $response->assertStatus(200);
-    // }
-
-    // /**
-    //  * A basic feature test example.
-    //  */
-    // public function test_transfer_fails_if_authorization_service_denies(): void
-    // {
-    //     $response = $this->get('/');
-
-    //     $response->assertStatus(200);
-    // }
+        $response->assertStatus(200);
+    }
 }

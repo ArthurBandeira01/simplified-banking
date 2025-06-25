@@ -58,7 +58,6 @@ class TransactionController
     public function transfer(TransactionRequest $request)
     {
         $data = $request->all();
-
         $payerWallet = $this->walletService->findWalletById($data['payer_wallet_id']);
         $payeeWallet = $this->walletService->findWalletById($data['payee_wallet_id']);
 
@@ -72,7 +71,6 @@ class TransactionController
 
         // Verify authorization
         $authResponse = Http::get('https://util.devi.tools/api/v2/authorize');
-        // dd($authResponse->json());
         if ($authResponse->failed() || $authResponse->json('message') !== 'Autorizado') {
             return response()->json(['error' => 'Transfer not authorized.'], 403);
         }
@@ -83,10 +81,10 @@ class TransactionController
             $transaction = $this->transactionService->create($data);
             $description = 'Transaction completed.';
 
-            $payerWallet->decrement('balance', $value);
-            $payeeWallet->increment('balance', $value);
+            $payerWallet->decrement('balance', $data['value']);
+            $payeeWallet->increment('balance', $data['value']);
 
-            $transactionHistory = $this->transactionHistoryService->create($transaction->id, 200, $description);
+            $this->transactionHistoryService->create($transaction->id, 'completed', $description);
 
             DB::commit();
 
@@ -95,7 +93,7 @@ class TransactionController
             //     'message' => 'You have received a transfer of R$ ' . number_format($value, 2, ',', '.')
             // ]);
 
-            return TransactionResource::collection($transaction);
+            return new TransactionResource($transaction);
 
         } catch (\Exception $e) {
             DB::rollBack();

@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\TransactionHistory;
 use App\Repositories\TransactionHistoryRepository;
-use Illuminate\Http\Request;
 
 class TransactionHistoryService
 {

@@ -11,6 +11,8 @@ class Transaction extends Model
 {
     use SoftDeletes, HasFactory;
 
+    protected $table = "transactions";
+
     protected $fillable = [
         'payer_wallet_id',
         'payee_wallet_id',

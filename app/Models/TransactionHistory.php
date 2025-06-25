@@ -11,6 +11,8 @@ class TransactionHistory extends Model
 {
     use SoftDeletes, HasFactory;
 
+    protected $table = "transactions_history";
+
     protected $fillable = [
         'transaction_id',
         'description',

@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\Transaction;
 use App\Repositories\TransactionRepository;
-use Illuminate\Http\Request;
 
 class TransactionService
 {
@@ -16,8 +16,8 @@ class TransactionService
     /**
      * Create transaction.
      */
-    public function create(array $data)
+    public function create(array $data): Transaction
     {
-        $this->transactionRepository->create($data);
+        return $this->transactionRepository->create($data);
     }
 }
