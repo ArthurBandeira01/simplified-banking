@@ -70,8 +70,13 @@ class TransactionController
         }
 
         // Verify authorization
-        $authResponse = Http::get('https://util.devi.tools/api/v2/authorize');
-        if ($authResponse->failed() || $authResponse->json('message') !== 'Autorizado') {
+       $authResponse = Http::get('https://util.devi.tools/api/v2/authorize');
+
+        if (
+            $authResponse->failed() ||
+            $authResponse->json('status') !== 'success' ||
+            $authResponse->json('data.authorization') !== true
+        ) {
             return response()->json(['error' => 'Transfer not authorized.'], 403);
         }
 
@@ -89,9 +94,9 @@ class TransactionController
             DB::commit();
 
             // Notificar recebedor
-            // Http::post('https://util.devi.tools/api/v1/notify', [
-            //     'message' => 'You have received a transfer of R$ ' . number_format($value, 2, ',', '.')
-            // ]);
+            Http::post('https://util.devi.tools/api/v1/notify', [
+                'message' => 'You have received a transfer of R$ ' . number_format($data['value'], 2, ',', '.')
+            ]);
 
             return new TransactionResource($transaction);
 
