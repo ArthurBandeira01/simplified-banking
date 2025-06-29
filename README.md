@@ -48,31 +48,6 @@ Portas usadas para os serviços foram as seguintes:
 * MySQL: 3300
 * PHPMyAdmin: 8080
 
-
-Já partindo para a 2° parte do challenge foi feito as rotas e endpoints para a API, no caso foram 5:
-
-* GET '/': Detalhes da API, se conexão leitura e escritura com a base de dados está OK, horário da última vez que o CRON foi executado, tempo online e uso de memória.
-* GET '/products': Listar todos os produtos da base de dados, adicionar sistema de paginação para não sobrecarregar o REQUEST
-* GET '/products/{code}': Obter a informação somente de um produto da base de dados
-* PUT '/products/{code}': Será responsável por receber atualizações do Projeto Web
-* DELETE '/products/{code}': Mudar o status do produto para trash
-
-Utilizei o Guzzle para fazer requisições e para baixá-lo rodei o seguinte comando:
-
-`composer require guzzlehttp/guzzle`
-
-Para criar os testes utilizei o comando a seguir seguindo o padrão de estrutura de pastas:
-
-`php artisan make:test app/Http/Controllers/Api/ProductTest`
-
-**NOTAS**: 
-* Para rodar o teste unitário pode-se utilizar o seguinte comando com o método de teste -> `php artisan test --filter ProductTest::testIndex` 
-* Para rodar o servidor: 
-``` 
-php artisan migrate db:seed
-php artisan serve
-```
-
 ### Funcionamento
 
 Feita as atualizações e instalação acima, ao acessar a rota /api/ é possível verificar a conexão com o banco e o uso da memória.
